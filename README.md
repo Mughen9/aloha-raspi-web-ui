@@ -1,16 +1,15 @@
 # ALOHA Control System
 
-The ALOHA Control System is a modular, ROS 2-based software suite designed for robotic orchestration and task automation. It includes two frontend interfaces (a local touchscreen and a web-based GUI) and a backend ROS 2 service node called Node Manager.
+The ALOHA Control System is a modular, ROS 2-based framework designed for robotic task orchestration. It features a central backend service (Node Manager) and two user interfaces: a touchscreen GUI for Raspberry Pi and a browser-based HTML interface. These components are organized for clarity and scalability in real-world deployments.
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```
 aloha-raspi-web-ui/
 ├── backend/
 │   ├── node_manager.py
-│   ├── README.md
 │   └── Images/
 │       ├── backend flow.png
 │       └── Overall_Work_Flow_Architecture.png
@@ -24,95 +23,82 @@ aloha-raspi-web-ui/
 │   │       └── ALOHA_GUI_TOUCH_PANEL_VIEW.jpeg
 │   ├── ui/
 │   │   ├── Web_page (1).html
-│   │   ├── README.md
 │   │   └── Images/
 │   │       ├── html class.png
 │   │       ├── html uml.png
 │   │       ├── html camera.png
 │   │       └── html system contetx.png
-├── README.md  <-- Main system overview
 ```
 
 ---
 
 ## System Overview
 
-This system is composed of:
+This system includes:
 
-- **Backend Node Manager**: Manages ROS 2 bringup, task execution, and service coordination.
+- **Backend Node Manager**: A ROS 2 node providing services to control robot state, record tasks, and handle system execution.
 - **Frontend Interfaces**:
-  - **Raspberry Pi GUI**: Touchscreen interface using `pygame`.
-  - **Web Interface**: HTML + JS interface using `rosbridge_server`.
+  - **Raspberry Pi GUI**: Touchscreen-based local interface built with Python and pygame.
+  - **Web UI**: HTML and JavaScript-based interface for browser interaction using WebSockets.
 
 ---
 
 ## Backend Architecture
 
-The backend Node Manager handles service logic via ROS 2:
+The backend handles ROS 2 services for launching, sleeping, and task recording. Subprocesses are managed to ensure controlled execution.
 
-- `launch_ros2` to initialize bringup
-- `run_sleep` to execute sleep mode
-- `run_auto_record` to launch recording tasks with parameters
-
-**Diagram**:  
-![Backend Flow](backend/Images/backend flow.png)
+**Architecture Diagram**  
+![Backend Flow](backend/Images/backend%20flow.png)
 
 ---
 
-## Raspberry Pi Frontend
+## Raspberry Pi GUI
 
-- Designed for local physical interaction
-- Built with `pygame` and `rclpy`
-- Dynamically interacts with ROS services
+This interface supports touch input and communicates directly with the backend using ROS 2 Python clients.
 
-**Diagram**:  
-![Raspi Flow](frontend/raspi/Images/raspi flow.png)
+**Flow Diagram**  
+![Raspberry Pi Flow](frontend/raspi/Images/raspi%20flow.png)
 
 ---
 
-## Web Frontend
+## Web Interface
 
-- Browser-based and network-accessible
-- Built with HTML, ROSLIB.js, and TailwindCSS
-- Displays camera feeds and buttons for all operations
+The HTML UI is accessible through any modern browser and communicates with the ROS backend using `rosbridge_server`. Camera feeds and control buttons are integrated for seamless operation.
 
-**Class Structure**:  
-![HTML Class](frontend/ui/Images/html class.png)
+**Class Diagram**  
+![Web Class Diagram](frontend/ui/Images/html%20class.png)
 
-**Camera Feed Flow**:  
-![Camera Flow](frontend/ui/Images/html camera.png)
+**Camera Feed Flow**  
+![Camera Flow](frontend/ui/Images/html%20camera.png)
 
-**System Context**:  
-![System Diagram](frontend/ui/Images/html system contetx.png)
+**System Context**  
+![Web System Context](frontend/ui/Images/html%20system%20contetx.png)
 
 ---
 
-## How to Run
+## Launch Instructions
 
-From a ROS 2-sourced terminal:
+Ensure the ROS 2 environment is sourced before executing:
 
+**Backend Node Manager**
 ```bash
 ros2 run backend node_manager
 ```
 
-Run Raspberry Pi GUI:
-
+**Raspberry Pi Interface**
 ```bash
 python3 frontend/raspi/ALOHA_GUI_TOUCH.py
 ```
 
-Open the web interface:
-
+**Web UI**
 ```bash
 firefox frontend/ui/Web_page\ \(1\).html
 ```
 
-Make sure `rosbridge_websocket` is running for the web UI.
+Make sure `rosbridge_websocket` is running for the web interface to communicate properly.
 
 ---
 
-## Maintainer
+## Documentation
 
-U. Sai Jayaprakash  
-Graduate School of Science and Engineering, Hosei University  
-System Integration and Robotics Lab
+All supporting UML diagrams and architecture visuals are located within the respective `Images/` directories of each module.
