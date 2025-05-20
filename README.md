@@ -1,123 +1,118 @@
 # ALOHA Control System
 
-The ALOHA Control System is a modular, ROS 2-based software suite designed for the orchestration, visualization, and recording of robotic tasks. It includes both hardware-local and web-based frontends, supported by a centralized Node Manager backend service that handles bringup, execution control, and camera feeds.
+The ALOHA Control System is a modular, ROS 2-based software suite designed for robotic orchestration and task automation. It includes two frontend interfaces (a local touchscreen and a web-based GUI) and a backend ROS 2 service node called Node Manager.
 
 ---
 
-## Repository Structure
+## Project Structure
 
 ```
 aloha-raspi-web-ui/
-├── backend/              # ROS 2 Node Manager (Python)
+├── backend/
+│   ├── node_manager.py
+│   ├── README.md
+│   └── Images/
+│       ├── backend flow.png
+│       └── Overall_Work_Flow_Architecture.png
 ├── frontend/
-│   ├── ALOHA_GUI_TOUCH.py  # Touchscreen interface for Raspberry Pi
-│   ├── Web_page.html       # Browser-based web frontend
-├── docs/
-│   └── images/           # UML diagrams and flowcharts
-├── README.md             # Project overview (this file)
+│   ├── raspi/
+│   │   ├── ALOHA_GUI_TOUCH.py
+│   │   └── Images/
+│   │       ├── raspi flow.png
+│   │       ├── FLOW.png
+│   │       ├── ROS_GUI_TOUCH_UML.png
+│   │       └── ALOHA_GUI_TOUCH_PANEL_VIEW.jpeg
+│   ├── ui/
+│   │   ├── Web_page (1).html
+│   │   ├── README.md
+│   │   └── Images/
+│   │       ├── html class.png
+│   │       ├── html uml.png
+│   │       ├── html camera.png
+│   │       └── html system contetx.png
+├── README.md  <-- Main system overview
 ```
 
 ---
 
 ## System Overview
 
-This system consists of:
+This system is composed of:
 
-- **Node Manager (Backend):**  
-  A ROS 2 Python node that exposes services for launching the robot bringup stack, running a sleep mode, and initiating automated recording of tasks.
-
-- **Frontend Interfaces:**  
-  - **Raspberry Pi GUI:** Built using `pygame`, optimized for local touch-based operation.
-  - **Web Interface:** HTML + JavaScript UI that communicates over WebSockets via `rosbridge_server`.
+- **Backend Node Manager**: Manages ROS 2 bringup, task execution, and service coordination.
+- **Frontend Interfaces**:
+  - **Raspberry Pi GUI**: Touchscreen interface using `pygame`.
+  - **Web Interface**: HTML + JS interface using `rosbridge_server`.
 
 ---
 
-## Functional Architecture
+## Backend Architecture
 
-The following diagram provides a high-level view of how the frontend interfaces interact with the backend:
+The backend Node Manager handles service logic via ROS 2:
 
-![System Flow]\backend\Images/backend-flow.png)
+- `launch_ros2` to initialize bringup
+- `run_sleep` to execute sleep mode
+- `run_auto_record` to launch recording tasks with parameters
 
----
-
-## Frontend Architecture
-
-### Raspberry Pi Interface
-
-- Optimized for 1024x600 touch displays
-- Built using `pygame` and `rclpy`
-- Communicates directly with Node Manager services
-
-![Raspberry Pi Flow](docs/images/raspi-flow.png)
-
-### Web Interface
-
-- HTML5 interface styled with TailwindCSS
-- Communicates with backend via `rosbridge_server`
-- Real-time canvas views for multiple camera feeds
-
-![Web Class Diagram](docs/images/html-class.png)  
-![Camera Feed Flow](docs/images/html-camera.png)
+**Diagram**:  
+![Backend Flow](backend/Images/backend flow.png)
 
 ---
 
-## Node Manager Services
+## Raspberry Pi Frontend
 
-The backend exposes the following ROS 2 services:
+- Designed for local physical interaction
+- Built with `pygame` and `rclpy`
+- Dynamically interacts with ROS services
 
-| Service Name         | Type        | Description                            |
-|----------------------|-------------|----------------------------------------|
-| `launch_ros2`        | Trigger     | Launches full robot bringup stack      |
-| `run_sleep`          | Trigger     | Executes local sleep script            |
-| `run_auto_record`    | AutoRecord  | Starts task recording with arguments   |
-
-The service logic is implemented via Python `subprocess` calls and coordinated to avoid conflicting execution.
+**Diagram**:  
+![Raspi Flow](frontend/raspi/Images/raspi flow.png)
 
 ---
 
-## Development Setup
+## Web Frontend
 
-Ensure you have:
+- Browser-based and network-accessible
+- Built with HTML, ROSLIB.js, and TailwindCSS
+- Displays camera feeds and buttons for all operations
 
-- ROS 2 (Foxy or Humble)
-- `rosbridge_server` installed and available
-- For the web interface: serve `Web_page.html` in a browser
-- For the Pi interface: run `ALOHA_GUI_TOUCH.py` on a display-equipped Pi
+**Class Structure**:  
+![HTML Class](frontend/ui/Images/html class.png)
 
-Example launch command:
+**Camera Feed Flow**:  
+![Camera Flow](frontend/ui/Images/html camera.png)
+
+**System Context**:  
+![System Diagram](frontend/ui/Images/html system contetx.png)
+
+---
+
+## How to Run
+
+From a ROS 2-sourced terminal:
 
 ```bash
 ros2 run backend node_manager
 ```
 
-To open the web UI:
+Run Raspberry Pi GUI:
 
 ```bash
-firefox frontend/Web_page.html
+python3 frontend/raspi/ALOHA_GUI_TOUCH.py
 ```
 
----
+Open the web interface:
 
-## Documentation & Diagrams
-
-Architecture and behavior diagrams are available under:
-
-```
-docs/images/
-├── html-class.png
-├── html-camera.png
-├── html-uml.png
-├── raspi-flow.png
-├── backend-flow.png
+```bash
+firefox frontend/ui/Web_page\ \(1\).html
 ```
 
-Use these for internal references, presentations, or technical onboarding.
+Make sure `rosbridge_websocket` is running for the web UI.
 
 ---
 
 ## Maintainer
 
-Sai  
-
-
-For contributions or inquiries, please open a GitHub issue or contact directly.
+U. Sai Jayaprakash  
+Graduate School of Science and Engineering, Hosei University  
+System Integration and Robotics Lab
