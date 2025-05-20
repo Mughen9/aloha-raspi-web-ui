@@ -92,7 +92,8 @@ python3 frontend/raspi/ALOHA_GUI_TOUCH.py
 
 **Web UI**
 ```bash
-firefox frontend/ui/Web_page\ \(1\).html
+firefox "frontend/ui/Web_page (1).html"
+
 ```
 
 Make sure `rosbridge_websocket` is running for the web interface to communicate properly.
