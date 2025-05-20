@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Node Manager Control</title>
+  <script src="/home/sai/interbotix_ws/src/aloha/scripts/RosLib.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(145deg, #111827, #1f2937);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      border-radius: 1rem;
+      padding: 2rem;
+    }
+    .btn {
+      @apply bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-4 rounded transition-all duration-300 shadow-md hover:scale-105;
+    }
+    .camera-container {
+      width: 100%;
+      height: 100%;
+      background-color: black;
+      border-radius: 1rem;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .camera-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 16px;
+      height: 100%;
+      width: 100%;
+      padding: 1rem;
+    }
+    .camera-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .camera-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .control-panel {
+      width: 25%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .camera-grid > div {
+      height: 100%;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body class="text-white">
+
+  <!-- Control Panel on the Left -->
+  <div class="control-panel">
+    <div class="glass">
+      <h2 class="text-2xl font-semibold mb-4">ROS 2 Services</h2>
+      <button class="btn w-full mb-3" id="launch_ros2_btn">Launch ROS 2 Bringup</button>
+      <button class="btn w-full mb-6" id="run_sleep_btn">Run Sleep</button>
+
+      <h2 class="text-xl font-semibold mb-2">Auto Record Task</h2>
+      <input type="text" id="task_name" placeholder="Task name (e.g. cutlery)" class="w-full mb-2 px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white">
+      <input type="number" id="num_episodes" placeholder="Number of Episodes" class="w-full mb-4 px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white">
+      <button class="btn w-full mb-4" id="start_auto_record_btn">Start Auto Record</button>
+
+      <div class="bg-gray-900 text-green-400 p-3 rounded mt-4" id="status">Waiting for action...</div>
+    </div>
+  </div>
+
+  <!-- Camera Grid on the Right -->
+  <div class="flex-1">
+    <div class="camera-grid">
+      <!-- Camera Left -->
+      <div class="camera-section glass">
+        <h3 class="camera-title">Left Cam</h3>
+        <div class="camera-container" id="camera-left">
+          <canvas id="camera-canvas-left"></canvas>
+        </div>
+      </div>
+
+      <!-- Camera Right -->
+      <div class="camera-section glass">
+        <h3 class="camera-title">Right Cam</h3>
+        <div class="camera-container" id="camera-right">
+          <canvas id="camera-canvas-right"></canvas>
+        </div>
+      </div>
+
+      <!-- Camera Up -->
+      <div class="camera-section glass">
+        <h3 class="camera-title">Up Cam</h3>
+        <div class="camera-container" id="camera-up">
+          <canvas id="camera-canvas-up"></canvas>
+        </div>
+      </div>
+
+      <!-- Camera Low -->
+      <div class="camera-section glass">
+        <h3 class="camera-title">Low Cam</h3>
+        <div class="camera-container" id="camera-low">
+          <canvas id="camera-canvas-low"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROS + JS Logic -->
+  <script>
+    var ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
+
+    ros.on('connection', () => {
+      console.log('Connected to WebSocket server.');
+      document.getElementById('status').innerText = "Connected to WebSocket server.";
+      subscribeToCameras();
+    });
+
+    ros.on('error', error => {
+      console.log('Error: ', error);
+      document.getElementById('status').innerText = "Error: " + error;
+    });
+
+    ros.on('close', () => {
+      console.log('Closed connection to WebSocket server.');
+      document.getElementById('status').innerText = "Connection closed.";
+    });
+
+    const launchROS2Client = new ROSLIB.Service({
+      ros, name: '/launch_ros2', serviceType: 'std_srvs/srv/Trigger'
+    });
+
+    const runSleepClient = new ROSLIB.Service({
+      ros, name: '/run_sleep', serviceType: 'std_srvs/srv/Trigger'
+    });
+
+    const runAutoRecordClient = new ROSLIB.Service({
+      ros, name: '/run_auto_record', serviceType: 'aloha_msgs/srv/AutoRecord'
+    });
+
+    document.getElementById('launch_ros2_btn').onclick = () => {
+      launchROS2Client.callService({}, result => {
+        document.getElementById('status').innerText = "ROS 2 Bringup: " + result.message;
+      });
+    };
+
+    document.getElementById('run_sleep_btn').onclick = () => {
+      runSleepClient.callService({}, result => {
+        document.getElementById('status').innerText = "Sleep Program: " + result.message;
+      });
+    };
+
+    document.getElementById('start_auto_record_btn').onclick = () => {
+      const taskName = document.getElementById('task_name').value;
+      const numEpisodes = parseInt(document.getElementById('num_episodes').value, 10);
+      if (isNaN(numEpisodes) || numEpisodes <= 0) {
+        document.getElementById('status').innerText = "Enter a valid number of episodes.";
+        return;
+      }
+      runAutoRecordClient.callService({ task_name: taskName, num_episodes: numEpisodes }, result => {
+        document.getElementById('status').innerText = " Auto Record: " + result.message;
+      });
+    };
+
+    const cameras = [
+      { name: "Left Cam", path: "/cam_left_wrist/camera/color/image_rect_raw/compressed", canvasId: "camera-canvas-left" },
+      { name: "Right Cam", path: "/cam_right_wrist/camera/color/image_rect_raw/compressed", canvasId: "camera-canvas-right" },
+      { name: "Up Cam", path: "/cam_high/camera/color/image_rect_raw/compressed", canvasId: "camera-canvas-up" },
+      { name: "Low Cam", path: "/cam_low/camera/color/image_rect_raw/compressed", canvasId: "camera-canvas-low" }
+    ];
+
+    function subscribeToCameras() {
+      cameras.forEach((camera) => {
+        const canvas = document.getElementById(camera.canvasId);
+        const ctx = canvas.getContext("2d");
+        const imageTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: camera.path,
+          messageType: 'sensor_msgs/msg/CompressedImage'
+        });
+
+        imageTopic.subscribe(message => {
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          };
+          img.src = "data:image/jpeg;base64," + message.data;
+        });
+      });
+    }
+  </script>
+</body>
+</html>
