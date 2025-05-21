@@ -53,22 +53,7 @@ frontend/
 
 ---
 
-## Functional Blocks (SysML)
 
-```
-+--------------------------+
-| <<block>> Touch GUI      |
-+--------------------------+
-| - draw buttons           |
-| - task + episode input   |
-| - camera placeholders    |
-+--------------------------+
-| + run()                  |
-| + call service()         |
-+--------------------------+
-```
-
----
 
 ## Execution
 
