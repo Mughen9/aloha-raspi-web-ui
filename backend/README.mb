@@ -1,54 +1,39 @@
 # ALOHA Node Manager (Backend)
 
-The ALOHA Node Manager is the central backend module responsible for coordinating ROS 2 service operations, managing camera feeds, and executing predefined robot control workflows through external processes. It acts as the interface between frontend inputs and low-level robotic bringup and control.
+The Node Manager serves as the backend controller of the ALOHA robotic system. It is implemented in Python using ROS 2 and is responsible for executing the robot's core operational routines through services and subprocesses. It acts as the central coordination unit that responds to service calls from the user interfaces.
 
 ---
 
-## System Overview
+## Overview of Responsibilities
 
-This module exposes three core services to frontend interfaces (web or Raspberry Pi GUI):
-
-- **launch_ros2**: Launches the ALOHA bringup stack.
-- **run_sleep**: Executes a predefined sleep mode behavior.
-- **run_auto_record**: Triggers automated task recording based on user input.
-
-These services ensure coordinated execution and prevent overlap by terminating running subprocesses before new actions are initiated.
+- Launch the robot's bringup stack
+- Run the sleep mode behavior
+- Start automated task recordings with specified task name and number of episodes
+- Subscribe to camera image topics for monitoring or processing
+- Ensure that subprocesses do not run concurrently by terminating previous ones
 
 ---
 
-## Architecture Diagram
+## System Workflow
 
-### SysML Block Definition
+This diagram illustrates how the Node Manager fits into the system:
 
-```
-+--------------------------+
-| NodeManagerNode         |
-+--------------------------+
-| bringup_process          |
-| sleep_process            |
-| auto_record_process      |
-+--------------------------+
-| launch_ros2()            |
-| run_sleep()              |
-| run_auto_record(task,N)  |
-+--------------------------+
-```
+![Overall System Architecture](images/Overall_Work_Flow_Architecture.png)
 
 ---
 
-### UML Use Case Diagram (Text Representation)
+## Internal Logic Flow
 
-```
-Frontend UI
-   |
-   | 1. Launch
-   | 2. Sleep
-   | 3. Auto Record
-   v
-+----------------------+
-|  Node Manager Node   |
-+----------------------+
-```
+The diagram below explains how the services manage subprocess execution:
+
+![Backend Flow Diagram](images/backend%20flow.png)
+
+Each service triggers an associated command:
+- **Launch Service**: Starts the bringup sequence using `ros2 launch`
+- **Sleep Service**: Executes a sleep mode script via Python
+- **Auto Record Service**: Runs a bash script with a task name and episode count
+
+All previously running processes are terminated before a new command is issued.
 
 ---
 
@@ -61,76 +46,57 @@ backend/
 
 ---
 
-## Service API
+## ROS Services
 
-| Service Name       | Type        | Description                                      |
-|--------------------|-------------|--------------------------------------------------|
-| `launch_ros2`      | Trigger     | Launches ROS 2 bringup                          |
-| `run_sleep`        | Trigger     | Starts sleep script                             |
-| `run_auto_record`  | AutoRecord  | Executes auto_record.sh with task and episodes  |
+The Node Manager exposes the following ROS 2 services:
+
+| Service Name       | Service Type | Function                                        |
+|--------------------|---------------|-------------------------------------------------|
+| `launch_ros2`      | Trigger       | Launches the full robot bringup sequence        |
+| `run_sleep`        | Trigger       | Starts the robot's sleep behavior               |
+| `run_auto_record`  | AutoRecord    | Records a task with specified parameters        |
 
 ---
 
-## ROS Topics
+## Subscribed Camera Topics
 
-The node subscribes to image streams from the following sources:
-
+The node also subscribes to raw image topics from four cameras:
 - `/cam_high/camera/color/image_rect_raw`
 - `/cam_left_wrist/camera/color/image_rect_raw`
 - `/cam_low/camera/color/image_rect_raw`
 - `/cam_right_wrist/camera/color/image_rect_raw`
 
----
-
-## Process Control Flow
-
-```mermaid
-graph TD
-Init[Node Started] --> CreateServices
-CreateServices --> Launch[launch_ros2()]
-CreateServices --> Sleep[run_sleep()]
-CreateServices --> Record[run_auto_record(task, episodes)]
-
-Launch -->|Popen| Bringup
-Sleep -->|Popen| SleepScript
-Record -->|Popen| AutoRecordScript
-Cleanup -->|terminate()| SleepScript
-Cleanup --> AutoRecordScript
-```
+These subscriptions allow image handling or diagnostics during runtime.
 
 ---
 
 ## Requirements
 
-- ROS 2 Foxy or Humble
-- Python 3.8+
-- Required packages:
+- ROS 2 (Foxy or Humble)
+- Python 3.8 or higher
+- ROS 2 packages:
   - `rclpy`
   - `std_srvs`
   - `sensor_msgs`
-  - `aloha_msgs` (custom message definitions)
+  - `aloha_msgs` (custom service type)
 
 ---
 
 ## How to Run
 
-Make sure your ROS 2 workspace is sourced:
+Ensure that ROS 2 is sourced and the required workspace is built. Then, launch the Node Manager with:
 
 ```bash
 source ~/ros2_ws/install/setup.bash
 ros2 run backend node_manager
 ```
 
+Ensure that required scripts like `auto_record.sh` and `sleep.py` exist at the paths specified inside the script.
+
 ---
 
 ## Notes
 
-- Ensure `auto_record.sh` and `sleep.py` are executable and located in the expected directory.
-- Proper validation of input is handled before subprocesses are launched.
-- Each command is executed via `subprocess.Popen` for non-blocking parallelism.
-
----
-
-## Maintainer
-
-This module is developed and maintained as part of the ALOHA Robotics System.
+- Each subprocess is managed using Python’s `subprocess.Popen`
+- If a new command is triggered, any existing subprocess is terminated to prevent conflict
+- Validations (like task name checking) are built into the auto record service
