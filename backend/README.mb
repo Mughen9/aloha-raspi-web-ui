@@ -1,100 +1,22 @@
-
 # ALOHA Node Manager (Backend)
 
-This module serves as the core controller for the ALOHA robotic system, implemented in ROS 2 (Python). It handles service orchestration, camera feed subscription, and automated task execution via subprocess management.
+The ALOHA Node Manager is the central backend module responsible for coordinating ROS 2 service operations, managing camera feeds, and executing predefined robot control workflows through external processes. It acts as the interface between frontend inputs and low-level robotic bringup and control.
 
 ---
 
-##  System Role (SysML Block Definition)
+## System Overview
 
-```
-+------------------------+
-|   <<block>>           |
-|   NodeManagerNode     |
-+------------------------+
-| - bringup_process     |
-| - auto_record_process |
-| - sleep_process       |
-+------------------------+
-| + /launch_ros2()      |
-| + /run_sleep()        |
-| + /run_auto_record()  |
-+------------------------+
-```
+This module exposes three core services to frontend interfaces (web or Raspberry Pi GUI):
+
+- **launch_ros2**: Launches the ALOHA bringup stack.
+- **run_sleep**: Executes a predefined sleep mode behavior.
+- **run_auto_record**: Triggers automated task recording based on user input.
+
+These services ensure coordinated execution and prevent overlap by terminating running subprocesses before new actions are initiated.
 
 ---
 
-##  File Structure
+## Architecture Diagram
 
-```
-backend/
-└── node_manager.py
-```
+### SysML Block Definition
 
----
-
-##  Service Interface (UML Use Case)
-
-```
-User
- |
- | triggers
- v
-+-------------------+
-| Node Manager Node |
-+-------------------+
-| 1. Launch Bringup |
-| 2. Run Sleep      |
-| 3. Auto Record    |
-+-------------------+
-```
-
----
-
-##  Dependencies
-
-- ROS 2 (Humble or Foxy)
-- Python 3.8+
-- Packages:
-  - `std_srvs`
-  - `sensor_msgs`
-  - `aloha_msgs`
-
----
-
-##  Execution
-
-```bash
-source install/setup.bash
-ros2 run <your_package_name> node_manager
-```
-
----
-
-##  Subscribed Topics
-
-- `/cam_high/camera/color/image_rect_raw`
-- `/cam_left_wrist/camera/color/image_rect_raw`
-- `/cam_low/camera/color/image_rect_raw`
-- `/cam_right_wrist/camera/color/image_rect_raw`
-
----
-
-##  Process Control Logic
-
-```mermaid
-graph TD
-A[Launch ROS 2] -->|subprocess.Popen| B[Bringup]
-A2[Sleep Trigger] -->|Popen sleep.py| B2[Sleep Process]
-A3[Auto Record] -->|Popen shell| B3[auto_record.sh]
-StopAll -->|terminate()| B2
-StopAll --> B3
-```
-
----
-
-##  Author
-
-** Sai **
-
-Contributions and feedback are welcome.
