@@ -20,3 +20,117 @@ These services ensure coordinated execution and prevent overlap by terminating r
 
 ### SysML Block Definition
 
+```
++--------------------------+
+| NodeManagerNode         |
++--------------------------+
+| bringup_process          |
+| sleep_process            |
+| auto_record_process      |
++--------------------------+
+| launch_ros2()            |
+| run_sleep()              |
+| run_auto_record(task,N)  |
++--------------------------+
+```
+
+---
+
+### UML Use Case Diagram (Text Representation)
+
+```
+Frontend UI
+   |
+   | 1. Launch
+   | 2. Sleep
+   | 3. Auto Record
+   v
++----------------------+
+|  Node Manager Node   |
++----------------------+
+```
+
+---
+
+## File Location
+
+```
+backend/
+└── node_manager.py
+```
+
+---
+
+## Service API
+
+| Service Name       | Type        | Description                                      |
+|--------------------|-------------|--------------------------------------------------|
+| `launch_ros2`      | Trigger     | Launches ROS 2 bringup                          |
+| `run_sleep`        | Trigger     | Starts sleep script                             |
+| `run_auto_record`  | AutoRecord  | Executes auto_record.sh with task and episodes  |
+
+---
+
+## ROS Topics
+
+The node subscribes to image streams from the following sources:
+
+- `/cam_high/camera/color/image_rect_raw`
+- `/cam_left_wrist/camera/color/image_rect_raw`
+- `/cam_low/camera/color/image_rect_raw`
+- `/cam_right_wrist/camera/color/image_rect_raw`
+
+---
+
+## Process Control Flow
+
+```mermaid
+graph TD
+Init[Node Started] --> CreateServices
+CreateServices --> Launch[launch_ros2()]
+CreateServices --> Sleep[run_sleep()]
+CreateServices --> Record[run_auto_record(task, episodes)]
+
+Launch -->|Popen| Bringup
+Sleep -->|Popen| SleepScript
+Record -->|Popen| AutoRecordScript
+Cleanup -->|terminate()| SleepScript
+Cleanup --> AutoRecordScript
+```
+
+---
+
+## Requirements
+
+- ROS 2 Foxy or Humble
+- Python 3.8+
+- Required packages:
+  - `rclpy`
+  - `std_srvs`
+  - `sensor_msgs`
+  - `aloha_msgs` (custom message definitions)
+
+---
+
+## How to Run
+
+Make sure your ROS 2 workspace is sourced:
+
+```bash
+source ~/ros2_ws/install/setup.bash
+ros2 run backend node_manager
+```
+
+---
+
+## Notes
+
+- Ensure `auto_record.sh` and `sleep.py` are executable and located in the expected directory.
+- Proper validation of input is handled before subprocesses are launched.
+- Each command is executed via `subprocess.Popen` for non-blocking parallelism.
+
+---
+
+## Maintainer
+
+This module is developed and maintained as part of the ALOHA Robotics System.
