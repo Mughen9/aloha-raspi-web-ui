@@ -18,7 +18,7 @@ The Node Manager is the core backend service for the ALOHA robotic system. It pr
 
 This diagram provides an overview of how the Node Manager integrates into the broader control system:
 
-![Overall Architecture](Images/Overall_Work_Flow_Architecture.png)
+![Backend Flow](backend/Images/backend%20flow.png)
 
 ---
 
