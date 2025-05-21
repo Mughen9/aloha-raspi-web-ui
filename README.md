@@ -82,7 +82,9 @@ Ensure the ROS 2 environment is sourced before executing:
 
 **Backend Node Manager**
 ```bash
-ros2 run backend node_manager
+ros2 run <pckg> node_manager
+
+python3 node_manager.py
 ```
 
 **Raspberry Pi Interface**
@@ -92,7 +94,7 @@ python3 frontend/raspi/ALOHA_GUI_TOUCH.py
 
 **Web UI**
 ```bash
-firefox "frontend/ui/Web_page (1).html"
+firefox "frontend/ui/Web_page(1).html"
 
 ```
 
