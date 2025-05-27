@@ -1,3 +1,5 @@
+import os
+import json
 import pygame
 import threading
 import rclpy
@@ -5,7 +7,6 @@ from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
 from std_srvs.srv import Trigger
 from aloha_msgs.srv import AutoRecord
-
 
 class ROSClient(Node):
     def __init__(self):
@@ -36,7 +37,6 @@ class ROSClient(Node):
         rclpy.spin_until_future_complete(self, future)
         return future.result()
 
-
 class TouchGUI:
     def __init__(self):
         pygame.init()
@@ -65,7 +65,7 @@ class TouchGUI:
         self.status = "Waiting for input..."
         self.sleep_done = False
 
-        self.task_options = ['cutlery', 'aloha_mobile_hello_aloha']
+        self.task_options = self.load_task_options()
         self.scroll_offset = 0
         self.max_visible_options = 4
 
@@ -78,6 +78,16 @@ class TouchGUI:
             'Up Cam': pygame.Rect(400, 220, 300, 160),
             'Low Cam': pygame.Rect(720, 220, 280, 160),
         }
+
+    def load_task_options(self):
+        task_config_path = os.getenv("ALOHA_TASK_CONFIG", "./task_config.json")
+        try:
+            with open(task_config_path, "r") as f:
+                config = json.load(f)
+                return config.get("valid_tasks", [])
+        except Exception as e:
+            print(f"Failed to load task options from {task_config_path}: {e}")
+            return []
 
     def run(self):
         def ros_spin_thread():
@@ -125,16 +135,15 @@ class TouchGUI:
             self.screen.blit(self.small_font.render('-', True, (0, 0, 0)), (self.dec_button.x + 18, self.dec_button.y + 10))
 
             if self.active_input == 'task':
-                option_list = self.task_options
                 dropdown_start_y = 420
-                for i in range(self.scroll_offset, min(len(option_list), self.scroll_offset + self.max_visible_options)):
+                for i in range(self.scroll_offset, min(len(self.task_options), self.scroll_offset + self.max_visible_options)):
                     option_rect = pygame.Rect(360, dropdown_start_y + (i - self.scroll_offset) * 45, 300, 40)
                     pygame.draw.rect(self.screen, (60, 60, 60), option_rect)
                     pygame.draw.rect(self.screen, (255, 255, 255), option_rect, 1)
-                    label = self.small_font.render(option_list[i], True, (255, 255, 255))
+                    label = self.small_font.render(self.task_options[i], True, (255, 255, 255))
                     self.screen.blit(label, (option_rect.x + 10, option_rect.y + 10))
                     if click_pos and option_rect.collidepoint(click_pos):
-                        self.task_input = option_list[i]
+                        self.task_input = self.task_options[i]
                         self.active_input = None
                         break
 
